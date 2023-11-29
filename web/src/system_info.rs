@@ -457,4 +457,8 @@ impl SystemInfo {
         self.sys.refresh_networks();
         self.sys.refresh_disks();
     }
+    pub fn get_less_overview(&mut self) -> Overview {
+        SystemInfo::refresh_less(self);
+        self.get_overview()
+    }
 }

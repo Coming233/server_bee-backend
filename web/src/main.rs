@@ -15,6 +15,7 @@ use crate::route::pty_route::pty_service;
 use crate::server::echo_ws;
 use actix_web::{middleware, web, App, HttpServer};
 use clap::Parser;
+use collector::logging::task_periodic_get_os_data;
 use log::info;
 
 mod cli;
@@ -23,10 +24,13 @@ mod db;
 mod handler;
 mod model;
 
+mod collector;
+mod monitor;
 mod pty;
 mod report;
 mod route;
 mod server;
+mod sqlite_db;
 mod system_info;
 mod test;
 mod token;
@@ -51,6 +55,8 @@ async fn main() -> std::io::Result<()> {
     actix_rt::spawn(async {
         Reporter::run(report_config).await;
     });
+
+    actix_rt::spawn(async { task_periodic_get_os_data().await });
 
     let is_dual_stack = is_ipv6_supported();
 
