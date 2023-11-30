@@ -18,9 +18,9 @@ pub async fn task_periodic_get_os_data() {
 
     for t_name in table_names.iter() {
         if let Ok(()) = sqlite_db.crate_table(t_name) {
-            info!("{} 数据表加载完成", t_name);
+            info!("{} load success", t_name);
         } else {
-            warn!("{} 数据表加载失败", t_name);
+            warn!("{} load failed", t_name);
         }
     }
 
@@ -31,9 +31,12 @@ pub async fn task_periodic_get_os_data() {
     let mut monitor_1h_data = MonitorVec::new(12);
 
     loop {
+        sleep(Duration::from_secs(1)).await;
+
         monitor_10s_data.insert(MonitoringData::new(
             system_info_instance.get_less_overview(),
         ));
+
         let now_timestamp = Utc::now().timestamp();
 
         if now_timestamp % 10 == 0 {
@@ -58,15 +61,13 @@ pub async fn task_periodic_get_os_data() {
             let average_1h_data = monitor_1h_data.get_average(now_timestamp.clone());
             insert_data(&sqlite_db, &average_1h_data, table_names[3]);
         }
-
-        sleep(Duration::from_secs(1)).await;
     }
 }
 
 fn insert_data(sqlite: &SQLiteDB, data: &MonitoringData, table_name: &str) {
     if let Ok(()) = sqlite.insert_data(table_name, data.clone()) {
-        // info!("插入数据表 {} 成功", table_name);
+        // info!("Insert Table {} success!", table_name);
     } else {
-        // warn!("插入数据表 {} 失败", table_name);
+        // warn!("Insert Table {} failed", table_name);
     }
 }
