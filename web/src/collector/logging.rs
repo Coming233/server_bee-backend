@@ -4,7 +4,8 @@ use crate::system_info::SystemInfo;
 use chrono::Utc;
 use log::{info, warn};
 use std::path::PathBuf;
-use tokio::time::{sleep, Duration};
+use std::time::SystemTime;
+use tokio::time::{sleep_until, Duration, Instant};
 
 pub async fn task_periodic_get_os_data() {
     let table_names: Vec<&str> = vec![
@@ -30,8 +31,12 @@ pub async fn task_periodic_get_os_data() {
     let mut monitor_5min_data = MonitorVec::new(5);
     let mut monitor_1h_data = MonitorVec::new(12);
 
+    let mut last_execution = Instant::now();
+
     loop {
-        sleep(Duration::from_secs(1)).await;
+        last_execution += Duration::from_millis(1000);
+
+        sleep_until(last_execution).await;
 
         monitor_10s_data.insert(MonitoringData::new(
             system_info_instance.get_less_overview(),
