@@ -116,9 +116,9 @@ impl MonitorVec {
         }
         self.push_back(os_data);
     }
-    pub fn get_average(&self) -> MonitoringData {
+    pub fn get_average(&self, timestamp: i64) -> MonitoringData {
         MonitoringData {
-            timestamp: Utc::now().timestamp(),
+            timestamp: timestamp,
             load_1: MonitorVec::average_f32(self.load_1.clone()),
             load_5: MonitorVec::average_f32(self.load_5.clone()),
             load_15: MonitorVec::average_f32(self.load_15.clone()),

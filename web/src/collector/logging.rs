@@ -36,25 +36,25 @@ pub async fn task_periodic_get_os_data() {
         let now_timestamp = Utc::now().timestamp();
 
         if now_timestamp % 10 == 0 {
-            let average_10s_data = monitor_10s_data.get_average();
+            let average_10s_data = monitor_10s_data.get_average(now_timestamp.clone());
             insert_data(&sqlite_db, &average_10s_data, table_names[0]);
             monitor_1min_data.insert(average_10s_data);
         }
 
         if now_timestamp % (10 * 6) == 0 {
-            let average_1min_data = monitor_1min_data.get_average();
+            let average_1min_data = monitor_1min_data.get_average(now_timestamp.clone());
             insert_data(&sqlite_db, &average_1min_data, table_names[1]);
             monitor_5min_data.insert(average_1min_data);
         }
 
         if now_timestamp % (10 * 6 * 5) == 0 {
-            let average_5min_data = monitor_5min_data.get_average();
+            let average_5min_data = monitor_5min_data.get_average(now_timestamp.clone());
             insert_data(&sqlite_db, &average_5min_data, table_names[2]);
             monitor_1h_data.insert(average_5min_data);
         }
 
         if now_timestamp % (10 * 6 * 5 * 12) == 0 {
-            let average_1h_data = monitor_1h_data.get_average();
+            let average_1h_data = monitor_1h_data.get_average(now_timestamp.clone());
             insert_data(&sqlite_db, &average_1h_data, table_names[3]);
         }
 
