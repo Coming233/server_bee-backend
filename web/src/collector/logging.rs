@@ -15,6 +15,7 @@ pub async fn task_periodic_get_os_data() {
     ];
 
     let sqlite_db = SQLiteDB::new(PathBuf::from("my_linux.db")).unwrap();
+
     for t_name in table_names.iter() {
         if let Ok(()) = sqlite_db.crate_table(t_name) {
             info!("{} 数据表加载完成", t_name);

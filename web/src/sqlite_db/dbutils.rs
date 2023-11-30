@@ -1,13 +1,13 @@
-use std::path::PathBuf;
-
 use crate::monitor::monitoring_data::MonitoringData;
 use rusqlite::{params, Connection, Result};
+use std::error::Error;
+use std::path::PathBuf;
 
 pub struct SQLiteDB {
     sqlite_conn: Connection,
 }
 impl SQLiteDB {
-    pub fn new(db_path: PathBuf) -> Result<Self> {
+    pub fn new(db_path: PathBuf) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             sqlite_conn: Connection::open(db_path)?,
         })
