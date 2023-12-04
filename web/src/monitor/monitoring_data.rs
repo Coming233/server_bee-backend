@@ -3,22 +3,22 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonitorVec {
-    len: usize,
-    load_1: VecDeque<f32>,
-    load_5: VecDeque<f32>,
-    load_15: VecDeque<f32>,
-    cpu_usage: VecDeque<f32>,
-    memory_used: VecDeque<u64>,
-    memory_free: VecDeque<u64>,
-    swap_used: VecDeque<u64>,
-    swap_free: VecDeque<u64>,
-    disk_used: VecDeque<u64>,
-    disk_read: VecDeque<u64>,
-    disk_write: VecDeque<u64>,
-    network_rx: VecDeque<u64>,
-    network_tx: VecDeque<u64>,
+    pub len: usize,
+    pub load_1: VecDeque<f32>,
+    pub load_5: VecDeque<f32>,
+    pub load_15: VecDeque<f32>,
+    pub cpu_usage: VecDeque<f32>,
+    pub memory_used: VecDeque<u64>,
+    pub memory_free: VecDeque<u64>,
+    pub swap_used: VecDeque<u64>,
+    pub swap_free: VecDeque<u64>,
+    pub disk_used: VecDeque<u64>,
+    pub disk_read: VecDeque<u64>,
+    pub disk_write: VecDeque<u64>,
+    pub network_rx: VecDeque<u64>,
+    pub network_tx: VecDeque<u64>,
 }
 
 impl MonitoringData {

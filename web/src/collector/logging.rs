@@ -1,21 +1,27 @@
 use crate::monitor::monitoring_data::{MonitorVec, MonitoringData};
+use crate::sqlite_db::db_reader::{ReadConfig, SQLiteReader};
 use crate::sqlite_db::dbutils::SQLiteDB;
 use crate::system_info::SystemInfo;
 use chrono::Utc;
 use log::{info, warn};
 use std::path::PathBuf;
-use std::time::SystemTime;
 use tokio::time::{sleep_until, Duration, Instant};
 
 pub async fn task_periodic_get_os_data() {
+    const READ_CONFIG_10S_INTERVAL: i64 = 10;
+    const READ_CONFIG_1MIN_INTERVAL: i64 = 60;
+    const READ_CONFIG_5MIN_INTERVAL: i64 = 300;
+
+    let db_path = PathBuf::from("my_linux.db");
+
+    let sqlite_db = SQLiteDB::new(db_path.clone()).unwrap();
+
     let table_names: Vec<&str> = vec![
         "DataPer10Second",
         "DataPer1Minute",
         "DataPer5Minute",
         "DataPer1Hour",
     ];
-
-    let sqlite_db = SQLiteDB::new(PathBuf::from("my_linux.db")).unwrap();
 
     for t_name in table_names.iter() {
         if let Ok(()) = sqlite_db.crate_table(t_name) {
@@ -25,13 +31,50 @@ pub async fn task_periodic_get_os_data() {
         }
     }
 
-    let mut system_info_instance = SystemInfo::new();
+    let mut reader = SQLiteReader::new(db_path.clone()).unwrap();
+    let read_timestamp = Utc::now().timestamp();
+    let read_config_1min = ReadConfig::new(
+        vec!["all".to_string()],
+        read_timestamp - 60 * 1,
+        read_timestamp,
+        READ_CONFIG_10S_INTERVAL,
+    );
+    let read_config_5min = ReadConfig::new(
+        vec!["all".to_string()],
+        read_timestamp - 60 * 5,
+        read_timestamp,
+        READ_CONFIG_1MIN_INTERVAL,
+    );
+    let read_config_1hour = ReadConfig::new(
+        vec!["all".to_string()],
+        read_timestamp - 60 * 5 * 12,
+        read_timestamp,
+        READ_CONFIG_5MIN_INTERVAL,
+    );
+    let load_1min_data = reader
+        .read_with_fill(&read_config_1min)
+        .unwrap()
+        .monitor_vec;
+    let load_5min_data = reader
+        .read_with_fill(&read_config_5min)
+        .unwrap()
+        .monitor_vec;
+    let load_1h_data = reader
+        .read_with_fill(&read_config_1hour)
+        .unwrap()
+        .monitor_vec;
+    info!(
+        "1min:{}; 5min:{}; 1hour:{};",
+        load_1min_data.len, load_5min_data.len, load_1h_data.len
+    );
     let mut monitor_10s_data = MonitorVec::new(10);
-    let mut monitor_1min_data = MonitorVec::new(6);
-    let mut monitor_5min_data = MonitorVec::new(5);
-    let mut monitor_1h_data = MonitorVec::new(12);
+    let mut monitor_1min_data = load_1min_data;
+    let mut monitor_5min_data = load_5min_data;
+    let mut monitor_1h_data = load_1h_data;
 
     let mut last_execution = Instant::now();
+
+    let mut system_info_instance = SystemInfo::new();
 
     loop {
         last_execution += Duration::from_millis(1000);
