@@ -1,9 +1,10 @@
 use crate::monitor::monitoring_data::MonitorVec;
 use rusqlite::{Connection, Result};
+use serde::Serialize;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ReadData {
     pub time_vec: Vec<i64>,
     pub monitor_vec: MonitorVec,
@@ -98,29 +99,36 @@ impl SQLiteReader {
     }
 
     fn build_sql_query(read_config: &ReadConfig, table_name: String) -> String {
+        let mut metric_names = read_config.metric_name.join(",");
+        if metric_names.contains("*") {
+            metric_names = "*".to_string();
+        } else {
+            metric_names = format!("timestamp,{}", metric_names);
+        }
         format!(
-            "SELECT * FROM {} WHERE timestamp >= {} AND timestamp < {};",
-            table_name, read_config.start_time, read_config.stop_time
+            "SELECT {} FROM {} WHERE timestamp >= {} AND timestamp < {};",
+            metric_names, table_name, read_config.start_time, read_config.stop_time
         )
     }
     fn audit_data(read_data: &mut ReadData, read_config: &ReadConfig) {
         let req_len = (read_config.stop_time - read_config.start_time) / read_config.period;
         let get_len = read_data.monitor_vec.len as i64;
-        let temp = read_config.stop_time / read_config.period * read_config.period;
-        let stop_time = temp.clone();
+        let stop_time = read_config.stop_time / read_config.period * read_config.period;
         let start_time = stop_time - read_config.period * (req_len - 1);
-        let full_time_vec: Vec<i64> = (start_time..=stop_time)
-            .step_by(read_config.period as usize)
-            .collect();
 
         if get_len < req_len {
+            let full_time_vec: Vec<i64> = (start_time..=stop_time)
+                .step_by(read_config.period as usize)
+                .collect();
             let miss_vec = Self::find_miss(&full_time_vec, &read_data.time_vec);
             read_data.time_vec.clone_from(&full_time_vec);
+
             Self::fill_data(&mut read_data.monitor_vec.load_1, &miss_vec, 0.0);
             Self::fill_data(&mut read_data.monitor_vec.load_5, &miss_vec, 0.0);
             Self::fill_data(&mut read_data.monitor_vec.load_15, &miss_vec, 0.0);
             Self::fill_data(&mut read_data.monitor_vec.cpu_usage, &miss_vec, 0.0);
             Self::fill_data(&mut read_data.monitor_vec.memory_used, &miss_vec, 0);
+
             Self::fill_data(&mut read_data.monitor_vec.memory_free, &miss_vec, 0);
             Self::fill_data(&mut read_data.monitor_vec.swap_used, &miss_vec, 0);
             Self::fill_data(&mut read_data.monitor_vec.swap_free, &miss_vec, 0);

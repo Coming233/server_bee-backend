@@ -127,7 +127,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWebSocket {
                 let msg = text.trim();
                 if msg.starts_with('/') {
                     let mut command = msg.splitn(2, ' ');
-
                     match command.next() {
                         Some("/more") => self.signal = Signal::More,
                         Some("/less") => {

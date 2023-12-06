@@ -5,7 +5,9 @@ use std::net::TcpListener;
 use std::sync::{Arc, RwLock};
 
 use crate::config::config::Config;
-use crate::handler::http_handler::{check_token, kill_process, rest_token, version};
+use crate::handler::http_handler::{
+    check_token, get_collected_data, kill_process, rest_token, version,
+};
 
 use crate::report::reporter::Reporter;
 use crate::route::config_route::config_services;
@@ -84,6 +86,7 @@ async fn main() -> std::io::Result<()> {
             .configure(pty_service)
             .service(web::resource("/version").to(version))
             .service(web::resource("/check").to(check_token))
+            .service(web::resource("/collector").to(get_collected_data))
             .service(kill_process)
             .service(rest_token)
             // websocket route

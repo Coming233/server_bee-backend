@@ -34,19 +34,19 @@ pub async fn task_periodic_get_os_data() {
     let mut reader = SQLiteReader::new(db_path.clone()).unwrap();
     let read_timestamp = Utc::now().timestamp();
     let read_config_1min = ReadConfig::new(
-        vec!["all".to_string()],
+        vec!["*".to_string()],
         read_timestamp - 60 * 1,
         read_timestamp,
         READ_CONFIG_10S_INTERVAL,
     );
     let read_config_5min = ReadConfig::new(
-        vec!["all".to_string()],
+        vec!["*".to_string()],
         read_timestamp - 60 * 5,
         read_timestamp,
         READ_CONFIG_1MIN_INTERVAL,
     );
     let read_config_1hour = ReadConfig::new(
-        vec!["all".to_string()],
+        vec!["*".to_string()],
         read_timestamp - 60 * 5 * 12,
         read_timestamp,
         READ_CONFIG_5MIN_INTERVAL,

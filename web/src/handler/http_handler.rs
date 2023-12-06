@@ -1,10 +1,13 @@
 use crate::config::config::Config;
 use crate::handler::result::HttpResult;
+use crate::sqlite_db::db_reader::{ReadConfig, SQLiteReader};
 use crate::token::communication_token::CommunicationToken;
 use crate::traits::json_response::JsonResponse;
 use actix_web::{post, web, HttpResponse, Responder};
 use log::warn;
 use serde::{Deserialize, Serialize};
+use serde_json;
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
 
@@ -13,8 +16,32 @@ pub struct KilledInfo {
     pid: String,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct QueryParams {
+    start_time: i64,
+    stop_time: i64,
+    period: i64,
+}
+
 pub async fn version() -> impl Responder {
     env!("CARGO_PKG_VERSION")
+}
+
+pub async fn get_collected_data(
+    _token: CommunicationToken,
+    query_params: web::Query<QueryParams>,
+) -> impl Responder {
+    let params = query_params.into_inner();
+    let read_config = ReadConfig::new(
+        vec!["*".to_string()],
+        params.start_time,
+        params.stop_time,
+        params.period,
+    );
+    let mut reader = SQLiteReader::new(PathBuf::from("my_linux.db")).unwrap();
+    let read_data = reader.read_with_fill(&read_config).unwrap();
+
+    serde_json::to_string(&read_data.monitor_vec).unwrap()
 }
 
 #[post("/kill")]
