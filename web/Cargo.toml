@@ -14,6 +14,7 @@ subsystem = []
 default = ["rustls-tls"]
 native-tls = ["reqwest/default-tls"]
 rustls-tls = ["reqwest/rustls-tls"]
+sqlite-bundled = ["rusqlite/bundled"]
 
 [dependencies]
 actix = "0.13"
